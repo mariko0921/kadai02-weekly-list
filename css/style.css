@@ -1,0 +1,245 @@
+
+/* 全体の設定 */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background-color: #fffaeb;
+    color: #4e4038;
+    font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+}
+
+/* タイトル */
+header {
+    text-align: center;
+    padding: 35px 15px 20px;
+}
+
+header h1 {
+    font-size: 30px;
+    line-height: 1.5;
+    margin: 0;
+}
+
+header h1 span {
+    color: #f28a00;
+    font-size: 36px;
+}
+
+header p {
+    color: #bc9a64;
+    font-size: 12px;
+    letter-spacing: 3px;
+}
+
+/* メイン */
+main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* 今日の達成率 */
+#progress {
+    background: white;
+    border-radius: 25px;
+    padding: 25px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    box-shadow: 0 5px 20px rgba(150, 110, 40, 0.08);
+}
+
+/* 円グラフ */
+.progress-circle {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: conic-gradient(
+        #ffcd45 0%,
+        #fff0ca 0%
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 円グラフの内側 */
+.progress-inner {
+    width: 160px;
+    height: 160px;
+    background-color: white;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.progress-inner h2 {
+    font-size: 14px;
+    margin: 0;
+}
+
+#today-rate {
+    font-size: 48px;
+    font-weight: bold;
+    color: #f28a00;
+    margin: 5px 0;
+}
+
+#today-count {
+    font-size: 14px;
+    margin: 0;
+}
+
+/* 曜日のエリア */
+#week {
+    background: white;
+    border-radius: 25px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 5px 20px rgba(150, 110, 40, 0.08);
+}
+
+#week h2 {
+    font-size: 20px;
+}
+
+/* 曜日を横並び */
+.week-days {
+    display: flex;
+    gap: 8px;
+}
+
+.week-days button {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    border-radius: 12px;
+    background: #fff4d9;
+    color: #6b5848;
+    padding: 15px 0;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* 4カテゴリ共通 */
+#housework,
+#programming,
+#study,
+#health {
+    border-radius: 25px;
+    padding: 22px;
+    margin-bottom: 20px;
+    box-shadow: 0 5px 15px rgba(100, 80, 40, 0.05);
+}
+
+/* カテゴリごとの色 */
+#housework {
+    background-color: #fff1cd;
+}
+
+#programming {
+    background-color: #e6f1ff;
+}
+
+#study {
+    background-color: #ffe7e7;
+}
+
+#health {
+    background-color: #e5f6e2;
+}
+
+/* カテゴリ見出し */
+main section h2 {
+    font-size: 22px;
+}
+
+/* リスト */
+main section ul {
+    list-style: none;
+    padding: 0;
+}
+
+/* チェック項目 */
+main section li {
+    background-color: white;
+    border: 1px solid #eee5dc;
+    border-radius: 15px;
+    padding: 18px;
+    margin-bottom: 10px;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+}
+
+/* チェックボックス */
+input[type="checkbox"] {
+    width: 23px;
+    height: 23px;
+    accent-color: #f5b400;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+/* チェック済みの項目 */
+main section li:has(input:checked) {
+    background-color: #efeeec;
+    color: #aaa5a1;
+    text-decoration: line-through;
+}
+
+/* 項目追加ボタン */
+main section > button {
+    background-color: white;
+    color: #7c6654;
+    border: 1px dashed #d6bc8f;
+    border-radius: 12px;
+    padding: 12px 20px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* スマホ対応 */
+@media (max-width: 600px) {
+
+    main {
+        padding: 12px;
+    }
+
+    header h1 {
+        font-size: 22px;
+    }
+
+    header h1 span {
+        font-size: 28px;
+    }
+
+    #housework,
+    #programming,
+    #study,
+    #health {
+        padding: 15px;
+    }
+
+    main section li {
+        padding: 16px;
+        font-size: 15px;
+    }
+
+    .week-days {
+        gap: 4px;
+    }
+
+    .week-days button {
+        font-size: 14px;
+        padding: 12px 0;
+    }
+}

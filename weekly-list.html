@@ -4,21 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>やると決めたら『やる!』リスト</title>
+
+        <!-- CSSの読み込み -->
+    <link rel="stylesheet" href="css/style.css">
+
 </head>
 <body>
      <!-- ① タイトル -->
     <header>
-        <h1>やると決めたら「やる」リスト</h1>
+    <h1>
+        やると決めたら<br>
+        <span>「やる！」</span></div>リスト✨
+    </h1>
+    <p>WEEKLY CHALLENGE TO DAILY ROUTINE</p>
     </header>
 
     <main>
 
         <!-- ② 今日の達成率 -->
         <section id="progress">
+    <div class="progress-circle">
+        <div class="progress-inner">
             <h2>今日の達成率</h2>
             <p id="today-rate">0%</p>
-            <p id="today-count">0 / 17 完了</p>
-        </section>
+            <p id="today-count">0 / 16 完了</p>
+        </div>
+    </div>
+    </section>
 
         <!-- ③ 曜日 -->
         <section id="week">
@@ -94,6 +106,10 @@
 
     </main>
 
-    
+<!-- jQueryを読み込む -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<!-- 自分のJavaScript -->
+<script src="js/script.js"></script>
 </body>
 </html>
