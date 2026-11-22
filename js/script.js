@@ -49,6 +49,7 @@ $(function () {
     monday.setDate(today.getDate() - todayIndex);
 
     const weekKey = "week_" + formatDate(monday);
+    const habitKey = "yaru_habits";
 
     // 現在画面で選んでいる曜日
     let selectedDay = todayIndex;
@@ -95,23 +96,50 @@ $(function () {
             };
         }
 
-        // 新しい週なら前週の項目を引き継ぐ
-        const previousMonday = new Date(monday);
-        previousMonday.setDate(monday.getDate() - 7);
+        // 新しい週なら習慣化項目を引き継ぐ
 
-        const previousKey = "week_" + formatDate(previousMonday);
-        const previousSaved = localStorage.getItem(previousKey);
+const savedHabits = localStorage.getItem(habitKey);
 
-        let tasks = defaultTasks;
+let tasks = defaultTasks;
 
-        if (previousSaved) {const previousData = JSON.parse(previousSaved);
+if (savedHabits !== null) {
+
+    // 習慣化専用の保存場所から取得
+    tasks = JSON.parse(savedHabits);
+
+} else {
+
+    // 初回のみ、過去の保存データから引き継ぐ
+    const previousKeys = Object.keys(localStorage)
+        .filter(function (key) {
+            return /^week_\d{4}-\d{2}-\d{2}$/.test(key)
+                && key < weekKey;
+        })
+        .sort()
+        .reverse();
+
+    if (previousKeys.length > 0) {
+
+        const previousData = JSON.parse(
+            localStorage.getItem(previousKeys[0])
+        );
 
         if (previousData.tasks) {
-        tasks = previousData.tasks.filter(function (task) {
-            return task.habit === true;
-        });
+            tasks = previousData.tasks.filter(function (task) {
+                return task.habit === true;
+            });
+        }
+
     }
+
 }
+
+// 新しい週はチェックを未達成にする
+return {
+    tasks: tasks,
+    checks: {}
+};
+
 
         return {
             tasks: tasks,
@@ -127,11 +155,25 @@ $(function () {
     // =====================================
 
     function saveWeek() {
-        localStorage.setItem(
-            weekKey,
-            JSON.stringify(weeklyData)
-        );
-    }
+
+    // ① 今週のデータを保存
+    localStorage.setItem(
+        weekKey,
+        JSON.stringify(weeklyData)
+    );
+
+    // ② 習慣化したい項目だけを取り出す
+    const habits = weeklyData.tasks.filter(function (task) {
+        return task.habit === true;
+    });
+
+    // ③ 習慣化専用の保存場所に保存
+    localStorage.setItem(
+        habitKey,
+        JSON.stringify(habits)
+    );
+
+}
 
 
     // =====================================
@@ -196,10 +238,18 @@ $(function () {
                 .addClass("edit-button")
                 .text("✏️");
 
-            // チェック項目・炎マーク・編集ボタンを並べる
-            li.append(label, habitButton, editButton);
+            // 削除ボタンを作る
+            const deleteButton = $("<button>")
+                .attr("type", "button")
+                .attr("data-id", task.id)
+                .attr("aria-label", "項目を削除")
+                .addClass("delete-button")
+                .text("🗑️");
+
+            // チェック項目と各ボタンを並べる
+            li.append(label, habitButton, editButton, deleteButton);
             list.append(li);
-            });
+                        });
 
         });
 
@@ -503,6 +553,54 @@ $("main").on("click", ".edit-button", function () {
         render();
 
     }
+
+});
+
+// =====================================
+// 項目を削除する
+// =====================================
+
+$("main").on("click", ".delete-button", function () {
+
+    const taskId = $(this).attr("data-id");
+
+    const task = weeklyData.tasks.find(function (item) {
+        return item.id === taskId;
+    });
+
+    if (!task) {
+        return;
+    }
+
+    // 削除する前に確認する
+    const message = task.habit
+        ? "「" + task.name + "」を習慣化リストからも削除しますか？"
+        : "「" + task.name + "」を削除しますか？";
+
+    if (!confirm(message)) {
+        return;
+    }
+
+    // 対象の項目をリストから削除
+    weeklyData.tasks = weeklyData.tasks.filter(function (item) {
+        return item.id !== taskId;
+    });
+
+    // 月曜日〜日曜日のチェック記録からも削除
+    for (let day = 0; day < 7; day++) {
+
+        weeklyData.checks[day] =
+            (weeklyData.checks[day] || []).filter(function (id) {
+                return id !== taskId;
+            });
+
+    }
+
+    // localStorageに保存
+    saveWeek();
+
+    // 画面と達成率を更新
+    render();
 
 });
 
