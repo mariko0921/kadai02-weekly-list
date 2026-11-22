@@ -104,13 +104,14 @@ $(function () {
 
         let tasks = defaultTasks;
 
-        if (previousSaved) {
-            const previousData = JSON.parse(previousSaved);
+        if (previousSaved) {const previousData = JSON.parse(previousSaved);
 
-            if (previousData.tasks) {
-                tasks = previousData.tasks;
-            }
-        }
+        if (previousData.tasks) {
+        tasks = previousData.tasks.filter(function (task) {
+            return task.habit === true;
+        });
+    }
+}
 
         return {
             tasks: tasks,
@@ -172,15 +173,37 @@ $(function () {
                 const text = $("<span>").text(task.name);
 
                 label.append(checkbox, text);
-                li.append(label);
-                list.append(li);
 
+            // 習慣化ボタンを作る
+            const habitButton = $("<button>")
+            .attr("type", "button")
+            .attr("data-id", task.id)
+            .attr("aria-label", "習慣化の設定")
+            .attr("aria-pressed", !!task.habit)
+            .addClass("habit-button")
+            .text("🔥");
+
+            // 習慣化対象の場合は色をつける
+            if (task.habit === true) {
+                habitButton.addClass("habit-active");
+            }
+
+            // 編集ボタンを作る
+            const editButton = $("<button>")
+                .attr("type", "button")
+                .attr("data-id", task.id)
+                .attr("aria-label", "項目名を編集")
+                .addClass("edit-button")
+                .text("✏️");
+
+            // チェック項目・炎マーク・編集ボタンを並べる
+            li.append(label, habitButton, editButton);
+            list.append(li);
             });
 
         });
 
     }
-
 
     // =====================================
     // ⑥ 今日・選択した日の達成率を計算
@@ -188,22 +211,23 @@ $(function () {
 
     function getDayRate(day) {
 
-        const total = weeklyData.tasks.length;
-        const checkedIds = weeklyData.checks[day] || [];
+    const total = weeklyData.tasks.length;
+    const checkedIds = weeklyData.checks[day] || [];
 
-        const done = checkedIds.length;
+    const done = weeklyData.tasks.filter(function (task) {
+        return checkedIds.includes(task.id);
+    }).length;
 
-        const rate = total === 0
-            ? 0
-            : Math.round(done / total * 100);
+    const rate = total === 0
+        ? 0
+        : Math.round(done / total * 100);
 
-        return {
-            total: total,
-            done: done,
-            rate: rate
-        };
-    }
-
+    return {
+        total: total,
+        done: done,
+        rate: rate
+    };
+}
 
     // =====================================
     // ⑦ 達成率と円グラフを更新
@@ -271,7 +295,7 @@ $(function () {
         let done = 0;
 
         for (let day = 0; day < 7; day++) {
-            done += (weeklyData.checks[day] || []).length;
+            done += getDayRate(day).done;
         }
 
         const rate = total === 0
@@ -313,35 +337,29 @@ $(function () {
     // ⑫ チェックを変更したら保存
     // =====================================
 
-    $("main").on("change", 'input[type="checkbox"]', function () {
+$("main").on("change", 'input[type="checkbox"][data-id]', function () {
+
+    const checkedIds = [];
+
+    // 達成チェックが入っている項目だけを取得
+    $('main input[type="checkbox"][data-id]:checked').each(function () {
 
         const taskId = $(this).attr("data-id");
 
-        const checkedIds = weeklyData.checks[selectedDay] || [];
-
-        if ($(this).prop("checked")) {
-
-            if (!checkedIds.includes(taskId)) {
-                checkedIds.push(taskId);
-            }
-
-        } else {
-
-            const index = checkedIds.indexOf(taskId);
-
-            if (index !== -1) {
-                checkedIds.splice(index, 1);
-            }
-
-        }
-
-        weeklyData.checks[selectedDay] = checkedIds;
-
-        saveWeek();
-        render();
+        checkedIds.push(taskId);
 
     });
 
+    // 選択中の曜日のチェック情報を上書き
+    weeklyData.checks[selectedDay] = checkedIds;
+
+    // localStorageに保存
+    saveWeek();
+
+    // 画面を更新
+    render();
+
+});
 
     // =====================================
     // ⑬ 項目追加ボタンをクリック
@@ -365,11 +383,23 @@ $(function () {
                 .attr("type", "text")
                 .attr("placeholder", "新しい項目を入力");
 
-            const saveButton = $("<button>")
-                .attr("type", "button")
-                .text("追加");
+            // 習慣化するかどうかのチェック欄
+            const habitCheckbox = $("<input>")
+            .attr("type", "checkbox")
+            .addClass("habit-setting");
 
-            form.append(input, saveButton);
+            // チェック欄の説明 
+            const habitLabel = $("<label>")
+            .addClass("habit-setting-label")
+            .append(habitCheckbox, " 🔥 毎日続けたい・習慣化したい");
+
+            // 追加ボタン
+            const saveButton = $("<button>")
+            .attr("type", "button")
+            .text("追加");
+
+            // 入力欄・習慣化チェック・追加ボタンを表示
+            form.append(input, habitLabel, saveButton);
             addButton.after(form);
 
             input.trigger("focus");
@@ -385,9 +415,10 @@ $(function () {
                 // 新しい項目を作成
                 const newTask = {
                     id: category + "_" + Date.now()
-                        + "_" + Math.random().toString(36).slice(2, 7),
+                    + "_" + Math.random().toString(36).slice(2, 7),
                     category: category,
-                    name: name
+                    name: name,
+                    habit: habitCheckbox.prop("checked")
                 };
 
                 // 配列に追加
@@ -408,6 +439,72 @@ $(function () {
 
     });
 
+
+    // =====================================
+    // ⑭ 習慣化ボタンをクリックしたとき
+    // =====================================
+
+$("main").on("click", ".habit-button", function () {
+
+    // 押された項目のIDを取得
+    const taskId = $(this).attr("data-id");
+
+    // IDが一致する項目を探す
+    const task = weeklyData.tasks.find(function (item) {
+        return item.id === taskId;
+    });
+
+    if (task) {
+
+        // 習慣化のON・OFFを切り替える
+        task.habit = !task.habit;
+
+        // localStorageに保存
+        saveWeek();
+
+        // 画面を更新
+        render();
+
+    }
+
+});
+
+// =====================================
+// 項目を編集する
+// =====================================
+
+$("main").on("click", ".edit-button", function () {
+
+    // 編集する項目のIDを取得
+    const taskId = $(this).attr("data-id");
+
+    // IDが一致する項目を探す
+    const task = weeklyData.tasks.find(function (item) {
+        return item.id === taskId;
+    });
+
+    if (task) {
+
+        // 現在の項目名を表示して編集する
+        const newName = prompt("項目名を変更してください", task.name);
+
+        // キャンセルや空欄の場合は変更しない
+        if (newName === null || newName.trim() === "") {
+            return;
+        }
+
+        // 項目名を変更
+        task.name = newName.trim();
+
+        // localStorageに保存
+        saveWeek();
+
+        // 画面を更新
+        render();
+
+    }
+
+});
 
     // =====================================
     // ⑭ 最初の画面表示
