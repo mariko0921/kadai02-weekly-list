@@ -422,10 +422,6 @@ $(function () {
 
 
     // =====================================
-    // 習慣化タブの一覧を表示する
-    // =====================================
-
-    // =====================================
     // 21日達成のお祝いと🏆の記録
     // =====================================
 
@@ -577,6 +573,10 @@ $(function () {
 
     }
 
+
+    // =====================================
+    // 習慣化タブの一覧を表示する
+    // =====================================
 
     // 前回表示したときの連続日数（スタンプの「ポン」の判定に使う）
     const previousStreaks = {};
@@ -1005,118 +1005,118 @@ $(function () {
     // ⑭ 習慣化ボタンをクリックしたとき
     // =====================================
 
-$("main").on("click", ".habit-button", function () {
+    $("main").on("click", ".habit-button", function () {
 
-    // 押された項目のIDを取得
-    const taskId = $(this).attr("data-id");
+        // 押された項目のIDを取得
+        const taskId = $(this).attr("data-id");
 
-    // IDが一致する項目を探す
-    const task = weeklyData.tasks.find(function (item) {
-        return item.id === taskId;
+        // IDが一致する項目を探す
+        const task = weeklyData.tasks.find(function (item) {
+            return item.id === taskId;
+        });
+
+        if (task) {
+
+            // 習慣化のON・OFFを切り替える
+            task.habit = !task.habit;
+
+            // localStorageに保存
+            saveWeek();
+
+            // 画面を更新
+            render();
+
+        }
+
     });
 
-    if (task) {
+    // =====================================
+    // 項目を編集する
+    // =====================================
 
-        // 習慣化のON・OFFを切り替える
-        task.habit = !task.habit;
+    $("main").on("click", ".edit-button", function () {
 
-        // localStorageに保存
-        saveWeek();
+        // 編集する項目のIDを取得
+        const taskId = $(this).attr("data-id");
 
-        // 画面を更新
-        render();
+        // IDが一致する項目を探す
+        const task = weeklyData.tasks.find(function (item) {
+            return item.id === taskId;
+        });
 
-    }
+        if (task) {
 
-});
+            // 現在の項目名を表示して編集する
+            const newName = prompt("項目名を変更してください", task.name);
 
-// =====================================
-// 項目を編集する
-// =====================================
+            // キャンセルや空欄の場合は変更しない
+            if (newName === null || newName.trim() === "") {
+                return;
+            }
 
-$("main").on("click", ".edit-button", function () {
+            // 項目名を変更
+            task.name = newName.trim();
 
-    // 編集する項目のIDを取得
-    const taskId = $(this).attr("data-id");
+            // localStorageに保存
+            saveWeek();
 
-    // IDが一致する項目を探す
-    const task = weeklyData.tasks.find(function (item) {
-        return item.id === taskId;
+            // 画面を更新
+            render();
+
+        }
+
     });
 
-    if (task) {
+    // =====================================
+    // 項目を削除する
+    // =====================================
 
-        // 現在の項目名を表示して編集する
-        const newName = prompt("項目名を変更してください", task.name);
+    $("main").on("click", ".delete-button", function () {
 
-        // キャンセルや空欄の場合は変更しない
-        if (newName === null || newName.trim() === "") {
+        const taskId = $(this).attr("data-id");
+
+        const task = weeklyData.tasks.find(function (item) {
+            return item.id === taskId;
+        });
+
+        if (!task) {
             return;
         }
 
-        // 項目名を変更
-        task.name = newName.trim();
+        // 削除する前に確認する
+        const message = task.habit
+            ? "「" + task.name + "」を習慣化リストからも削除しますか？"
+            : "「" + task.name + "」を削除しますか？";
+
+        if (!confirm(message)) {
+            return;
+        }
+
+        // 対象の項目をリストから削除
+        weeklyData.tasks = weeklyData.tasks.filter(function (item) {
+            return item.id !== taskId;
+        });
+
+        // 月曜日〜日曜日のチェック記録からも削除
+        for (let day = 0; day < 7; day++) {
+
+            weeklyData.checks[day] =
+                (weeklyData.checks[day] || []).filter(function (id) {
+                    return id !== taskId;
+                });
+
+        }
 
         // localStorageに保存
         saveWeek();
 
-        // 画面を更新
+        // 画面と達成率を更新
         render();
 
-    }
-
-});
-
-// =====================================
-// 項目を削除する
-// =====================================
-
-$("main").on("click", ".delete-button", function () {
-
-    const taskId = $(this).attr("data-id");
-
-    const task = weeklyData.tasks.find(function (item) {
-        return item.id === taskId;
     });
-
-    if (!task) {
-        return;
-    }
-
-    // 削除する前に確認する
-    const message = task.habit
-        ? "「" + task.name + "」を習慣化リストからも削除しますか？"
-        : "「" + task.name + "」を削除しますか？";
-
-    if (!confirm(message)) {
-        return;
-    }
-
-    // 対象の項目をリストから削除
-    weeklyData.tasks = weeklyData.tasks.filter(function (item) {
-        return item.id !== taskId;
-    });
-
-    // 月曜日〜日曜日のチェック記録からも削除
-    for (let day = 0; day < 7; day++) {
-
-        weeklyData.checks[day] =
-            (weeklyData.checks[day] || []).filter(function (id) {
-                return id !== taskId;
-            });
-
-    }
-
-    // localStorageに保存
-    saveWeek();
-
-    // 画面と達成率を更新
-    render();
-
-});
 
     // =====================================
-    // ⑭ 最初の画面表示
+    // ⑮ 最初の画面表示
     // =====================================
 
     saveWeek();
