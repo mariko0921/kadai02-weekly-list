@@ -988,3 +988,27 @@ main section > button:hover {
         max-width: 300px;
     }
 }
+
+/* ==========================================================
+   習慣化チャレンジの見出し＋ひとこと
+   ========================================================== */
+
+/* 見出しとひとことを横に並べる（幅が足りないときは下に折り返す） */
+.habit-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    margin-bottom: 4px;
+}
+
+.habit-header h2 {
+    margin: 0;
+}
+
+.habit-catch {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: #e8710a;
+}
