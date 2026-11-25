@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>やると決めたら『やる!』リスト</title>
 
+    <!-- 丸ゴシックのフォント（Google Fonts） -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
+
         <!-- CSSの読み込み -->
     <link rel="stylesheet" href="css/style.css">
 
@@ -45,6 +50,12 @@
                     <p id="habit-rate">0%</p>
                     <p id="habit-count">0 / 0 完了</p>
                 </div>
+            </div>
+
+            <!-- 今月のカレンダー（中身はJavaScriptで作る） -->
+            <div class="mini-calendar">
+                <p class="calendar-title" id="calendar-title"></p>
+                <div class="calendar-grid" id="calendar-grid"></div>
             </div>
         </section>
 
