@@ -422,6 +422,9 @@ $(function () {
     // 習慣化タブの一覧を表示する
     // =====================================
 
+    // 前回表示したときの連続日数（スタンプの「ポン」の判定に使う）
+    const previousStreaks = {};
+
     function renderHabitList() {
 
         const habits = weeklyData.tasks.filter(function (task) {
@@ -437,6 +440,9 @@ $(function () {
         // 選択中の曜日のチェック情報
         const checkedIds = weeklyData.checks[selectedDay] || [];
 
+        // 過去の週も含めた「日付→チェックしたID」の表
+        const history = buildCheckHistory();
+
         habits.forEach(function (task) {
 
             // 1行目：チェック欄・項目名・ボタン
@@ -448,14 +454,223 @@ $(function () {
                     categoryIcons[task.category]
                 ));
 
-            // 2行目以降（連続日数・21マス）はステップ4で追加する
+            // 2行目以降：連続日数と21マス
+            const info = getStreakInfo(task.id, history);
+
+            // 前回より連続日数が増えていたら、最新のスタンプを「ポン」とさせる
+            const isNewStamp = previousStreaks[task.id] !== undefined
+                && info.current > previousStreaks[task.id];
+
+            previousStreaks[task.id] = info.current;
+
             const li = $("<li>")
                 .addClass("habit-item")
-                .append(row);
+                .append(row, createChallenge(info, isNewStamp));
 
             list.append(li);
 
         });
+
+    }
+
+
+    // =====================================
+    // 21日チャレンジの表示（連続日数・最高記録・21マス）を作る
+    // =====================================
+
+    const CHALLENGE_DAYS = 21;
+
+    function createChallenge(info, isNewStamp) {
+
+        // 埋まるマスの数：21日目は21マス全部、22日目は次の周の1マス目
+        const filled = info.current === 0
+            ? 0
+            : (info.current - 1) % CHALLENGE_DAYS + 1;
+
+        // 何周目のチャレンジか（1〜21日目＝1周目、22〜42日目＝2周目…）
+        const round = info.current === 0
+            ? 1
+            : Math.floor((info.current - 1) / CHALLENGE_DAYS) + 1;
+
+        // ① 連続日数・最高記録
+        const stats = $("<p>").addClass("habit-stats");
+
+        stats.append(
+            $("<span>").addClass("streak-count")
+                .append("🔥 ", $("<strong>").text(info.current), " 日連続"),
+            $("<span>").text("最高 " + info.best + " 日")
+        );
+
+        if (round >= 2) {
+            stats.append($("<span>").text(round + "周目"));
+        }
+
+        // ② 21マスのスタンプ
+        const grid = $("<div>").addClass("stamp-grid");
+
+        for (let i = 1; i <= CHALLENGE_DAYS; i++) {
+
+            const stamp = $("<span>").addClass("stamp");
+
+            if (i <= filled) {
+                stamp.addClass("stamp-filled").text("🔥");
+            }
+
+            // いちばん新しく増えたマスにだけアニメーションをつける
+            if (isNewStamp && i === filled) {
+                stamp.addClass("stamp-new");
+            }
+
+            grid.append(stamp);
+        }
+
+        // ③ あと何日か
+        const remaining = CHALLENGE_DAYS - filled;
+
+        const message = $("<p>")
+            .addClass("habit-remaining")
+            .text(
+                remaining === 0
+                    ? "🎉 21日達成！"
+                    : "あと " + remaining + " 日！"
+            );
+
+        return $("<div>")
+            .addClass("habit-challenge")
+            .append(stats, grid, message);
+
+    }
+
+
+    // =====================================
+    // 日付の計算に使う小さな関数
+    // =====================================
+
+    // "2026-11-24" のような文字列を Date に変換する
+    function parseDate(text) {
+        const parts = text.split("-");
+        return new Date(
+            Number(parts[0]),
+            Number(parts[1]) - 1,
+            Number(parts[2])
+        );
+    }
+
+    // date の n 日後（マイナスなら n 日前）を返す
+    function addDays(date, n) {
+        const result = new Date(date);
+        result.setDate(result.getDate() + n);
+        return result;
+    }
+
+
+    // =====================================
+    // 過去の週も含めた「日付→チェックしたID」の表を作る
+    // 例：{ "2026-11-24": ["health_0", "study_1"], ... }
+    // =====================================
+
+    function buildCheckHistory() {
+
+        const history = {};
+
+        // 1週間分のデータを表に書き込む
+        function addWeek(mondayText, data) {
+
+            const mondayDate = parseDate(mondayText);
+
+            for (let day = 0; day < 7; day++) {
+
+                const ids = data.checks[day] || [];
+
+                if (ids.length > 0) {
+                    const dateText = formatDate(addDays(mondayDate, day));
+                    history[dateText] = ids;
+                }
+
+            }
+
+        }
+
+        // 保存されている過去の週（今週は下で別に追加する）
+        Object.keys(localStorage).forEach(function (key) {
+
+            if (!/^week_\d{4}-\d{2}-\d{2}$/.test(key) || key === weekKey) {
+                return;
+            }
+
+            try {
+                const data = normalizeWeek(JSON.parse(localStorage.getItem(key)));
+                addWeek(key.replace("week_", ""), data);
+            } catch (error) {
+                // 壊れたデータがあっても、ほかの週の計算は続ける
+            }
+
+        });
+
+        // 今週は画面で使っている最新のデータを使う
+        addWeek(formatDate(monday), weeklyData);
+
+        return history;
+
+    }
+
+
+    // =====================================
+    // 連続達成日数と最高記録を計算する
+    // =====================================
+
+    function getStreakInfo(taskId, history) {
+
+        const todayText = formatDate(today);
+
+        function isChecked(date) {
+            return (history[formatDate(date)] || []).includes(taskId);
+        }
+
+        // ① 今の連続日数
+        //    今日チェック済みなら今日から、まだなら昨日から1日ずつさかのぼる
+        let cursor = new Date(today);
+
+        if (!isChecked(cursor)) {
+            cursor = addDays(cursor, -1);
+        }
+
+        let current = 0;
+
+        while (isChecked(cursor)) {
+            current++;
+            cursor = addDays(cursor, -1);
+        }
+
+        // ② 最高記録
+        //    チェックした日を古い順に並べ、前の日の翌日なら連続とみなす
+        //    （未来の日のチェックは数えない）
+        const checkedDates = Object.keys(history)
+            .filter(function (dateText) {
+                return dateText <= todayText
+                    && history[dateText].includes(taskId);
+            })
+            .sort();
+
+        let best = 0;
+        let run = 0;
+        let previousText = null;
+
+        checkedDates.forEach(function (dateText) {
+
+            const isNextDay = previousText !== null
+                && formatDate(addDays(parseDate(previousText), 1)) === dateText;
+
+            run = isNextDay ? run + 1 : 1;
+            best = Math.max(best, run);
+            previousText = dateText;
+
+        });
+
+        return {
+            current: current,
+            best: Math.max(best, current)
+        };
 
     }
 
