@@ -54,9 +54,6 @@ $(function () {
     // 現在画面で選んでいる曜日
     let selectedDay = todayIndex;
 
-    // 現在開いているタブ（"all"＝すべて／"habit"＝習慣化）
-    let currentTab = "all";
-
 
     // =====================================
     // ③ localStorageからデータを取得
@@ -200,25 +197,50 @@ $(function () {
 
             tasks.forEach(function (task) {
 
-                // HTMLの要素を作る
                 const li = $("<li>");
-                const label = $("<label>");
 
-                const checkbox = $("<input>")
-                    .attr("type", "checkbox")
-                    .attr("data-id", task.id);
+                // チェック欄と各ボタンを並べる
+                li.append(createTaskRow(task, checkedIds, ""));
+                list.append(li);
 
-                checkbox.prop(
-                    "checked",
-                    checkedIds.includes(task.id)
-                );
+            });
 
-                const text = $("<span>").text(task.name);
+        });
 
-                label.append(checkbox, text);
+    }
 
-            // 習慣化ボタンを作る
-            const habitButton = $("<button>")
+
+    // =====================================
+    // 1つの項目（チェック欄＋🔥✏️🗑️ボタン）を作る
+    // Todoリストと習慣化タブの両方で使う
+    // =====================================
+
+    // カテゴリごとの絵文字（習慣化タブで項目名の前につける）
+    const categoryIcons = {
+        housework: "🏠",
+        programming: "💻",
+        study: "📚",
+        health: "❤️"
+    };
+
+    function createTaskRow(task, checkedIds, icon) {
+
+        const label = $("<label>");
+
+        const checkbox = $("<input>")
+            .attr("type", "checkbox")
+            .attr("data-id", task.id)
+            .prop("checked", checkedIds.includes(task.id));
+
+        // icon が空でなければ項目名の前につける
+        const text = $("<span>")
+            .addClass("task-name")
+            .text(icon ? icon + " " + task.name : task.name);
+
+        label.append(checkbox, text);
+
+        // 習慣化ボタンを作る
+        const habitButton = $("<button>")
             .attr("type", "button")
             .attr("data-id", task.id)
             .attr("aria-label", "習慣化の設定")
@@ -226,33 +248,32 @@ $(function () {
             .addClass("habit-button")
             .text("🔥");
 
-            // 習慣化対象の場合は色をつける
-            if (task.habit === true) {
-                habitButton.addClass("habit-active");
-            }
+        // 習慣化対象の場合は色をつける
+        if (task.habit === true) {
+            habitButton.addClass("habit-active");
+        }
 
-            // 編集ボタンを作る
-            const editButton = $("<button>")
-                .attr("type", "button")
-                .attr("data-id", task.id)
-                .attr("aria-label", "項目名を編集")
-                .addClass("edit-button")
-                .text("✏️");
+        // 編集ボタンを作る
+        const editButton = $("<button>")
+            .attr("type", "button")
+            .attr("data-id", task.id)
+            .attr("aria-label", "項目名を編集")
+            .addClass("edit-button")
+            .text("✏️");
 
-            // 削除ボタンを作る
-            const deleteButton = $("<button>")
-                .attr("type", "button")
-                .attr("data-id", task.id)
-                .attr("aria-label", "項目を削除")
-                .addClass("delete-button")
-                .text("🗑️");
+        // 削除ボタンを作る
+        const deleteButton = $("<button>")
+            .attr("type", "button")
+            .attr("data-id", task.id)
+            .attr("aria-label", "項目を削除")
+            .addClass("delete-button")
+            .text("🗑️");
 
-            // チェック項目と各ボタンを並べる
-            li.append(label, habitButton, editButton, deleteButton);
-            list.append(li);
-                        });
-
-        });
+        // jQueryの要素の集まりとして返す
+        return $().add(label)
+            .add(habitButton)
+            .add(editButton)
+            .add(deleteButton);
 
     }
 
@@ -289,6 +310,7 @@ $(function () {
 
     function updateProgress() {
 
+        // ① 全体の達成率（Todoリストタブで表示）
         const result = getDayRate(selectedDay);
 
         $("#today-rate").text(result.rate + "%");
@@ -297,11 +319,32 @@ $(function () {
             result.done + " / " + result.total + " 完了"
         );
 
-        $(".progress-circle").css(
+        $("#all-circle").css(
             "background",
             `conic-gradient(
                 #ffcd45 ${result.rate}%,
                 #fff0ca ${result.rate}%
+            )`
+        );
+
+        // ② 習慣化の達成率（習慣化タブで表示）
+        const habits = weeklyData.tasks.filter(function (task) {
+            return task.habit === true;
+        });
+
+        const habitResult = getDayRate(selectedDay, habits);
+
+        $("#habit-rate").text(habitResult.rate + "%");
+
+        $("#habit-count").text(
+            habitResult.done + " / " + habitResult.total + " 完了"
+        );
+
+        $("#habit-circle").css(
+            "background",
+            `conic-gradient(
+                #ff9f43 ${habitResult.rate}%,
+                #ffe3c4 ${habitResult.rate}%
             )`
         );
 
@@ -388,6 +431,32 @@ $(function () {
         // 🔥項目が1つもないときだけ案内文を出す
         $("#habit-list .habit-empty").toggle(habits.length === 0);
 
+        const list = $("#habit-list ul");
+        list.empty();
+
+        // 選択中の曜日のチェック情報
+        const checkedIds = weeklyData.checks[selectedDay] || [];
+
+        habits.forEach(function (task) {
+
+            // 1行目：チェック欄・項目名・ボタン
+            const row = $("<div>")
+                .addClass("habit-row")
+                .append(createTaskRow(
+                    task,
+                    checkedIds,
+                    categoryIcons[task.category]
+                ));
+
+            // 2行目以降（連続日数・21マス）はステップ4で追加する
+            const li = $("<li>")
+                .addClass("habit-item")
+                .append(row);
+
+            list.append(li);
+
+        });
+
     }
 
 
@@ -395,9 +464,8 @@ $(function () {
     // タブを切り替える
     // =====================================
 
+    // tabName は "all"（Todoリスト）か "habit"（習慣化）
     function switchTab(tabName) {
-
-        currentTab = tabName;
 
         // body に目印のクラスをつけ、CSSで表示・非表示を切り替える
         $("body").toggleClass("tab-habit", tabName === "habit");

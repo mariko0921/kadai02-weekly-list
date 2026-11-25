@@ -452,3 +452,64 @@ body.tab-habit #study,
 body.tab-habit #health {
     display: none;
 }
+
+/* =====================================
+   円グラフの切り替え
+   Todoリストタブ：全体の円グラフ／習慣化タブ：習慣化の円グラフ
+   ===================================== */
+
+/* 習慣化の円グラフはふだん隠す */
+#habit-circle {
+    display: none;
+}
+
+/* 習慣化タブのときは、全体を隠して習慣化だけ出す */
+body.tab-habit #all-circle {
+    display: none;
+}
+
+body.tab-habit #habit-circle {
+    display: flex;
+}
+
+#habit-rate {
+    font-size: 48px;
+    font-weight: bold;
+    color: #e8710a;
+    margin: 5px 0;
+}
+
+#habit-count {
+    font-size: 14px;
+    margin: 0;
+}
+
+/* =====================================
+   習慣化タブの項目
+   ===================================== */
+
+/* 1行目（チェック欄＋ボタン）の下に、連続日数や21マスを縦に積む */
+main section li.habit-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    cursor: default;
+}
+
+.habit-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* 習慣化タブでは、チェック済みでもカード全体は灰色にせず、項目名だけ線を引く */
+main section li.habit-item:has(input:checked) {
+    background-color: white;
+    color: inherit;
+    text-decoration: none;
+}
+
+main section li.habit-item:has(input:checked) .task-name {
+    color: #aaa5a1;
+    text-decoration: line-through;
+}

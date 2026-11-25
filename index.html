@@ -29,14 +29,24 @@
 
         <!-- ② 今日の達成率 -->
         <section id="progress">
-    <div class="progress-circle">
-        <div class="progress-inner">
-            <h2>今日の達成率</h2>
-            <p id="today-rate">0%</p>
-            <p id="today-count">0 / 0 完了</p>
-        </div>
-    </div>
-    </section>
+            <!-- 全体の達成率 -->
+            <div class="progress-circle" id="all-circle">
+                <div class="progress-inner">
+                    <h2>今日の達成率</h2>
+                    <p id="today-rate">0%</p>
+                    <p id="today-count">0 / 0 完了</p>
+                </div>
+            </div>
+
+            <!-- 🔥 習慣化の達成率（習慣化タブのときだけ表示） -->
+            <div class="progress-circle" id="habit-circle">
+                <div class="progress-inner">
+                    <h2>🔥 習慣化の達成率</h2>
+                    <p id="habit-rate">0%</p>
+                    <p id="habit-count">0 / 0 完了</p>
+                </div>
+            </div>
+        </section>
 
         <!-- ③ 曜日 -->
         <section id="week">
