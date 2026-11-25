@@ -415,12 +415,168 @@ $(function () {
         updateProgress();
         updateDays();
         updateWeeklyProgress();
+
+        // 21日達成した項目があればお祝いを出す
+        showNextCelebration();
     }
 
 
     // =====================================
     // 習慣化タブの一覧を表示する
     // =====================================
+
+    // =====================================
+    // 21日達成のお祝いと🏆の記録
+    // =====================================
+
+    // 保存場所：{ 項目ID: { trophies, lastMilestone, milestoneDate } }
+    //   trophies      … 🏆の累計
+    //   lastMilestone … 最後にお祝いした節目（21, 42, 63…）
+    //   milestoneDate … その節目に届いた日（同じ連続記録か見分けるのに使う）
+    const challengeKey = "yaru_challenge";
+
+    let challengeData = {};
+
+    try {
+        challengeData = JSON.parse(localStorage.getItem(challengeKey)) || {};
+    } catch (error) {
+        challengeData = {};
+    }
+
+    function saveChallenge() {
+        localStorage.setItem(challengeKey, JSON.stringify(challengeData));
+    }
+
+    // これから表示するお祝いの順番待ち
+    const celebrationQueue = [];
+
+    function checkMilestone(task, info) {
+
+        // 今届いている節目（20日なら0、21〜41日なら21、42〜62日なら42…）
+        const milestone = Math.floor(info.current / CHALLENGE_DAYS)
+            * CHALLENGE_DAYS;
+
+        if (milestone === 0) {
+            return;
+        }
+
+        const record = challengeData[task.id] || {
+            trophies: 0,
+            lastMilestone: 0,
+            milestoneDate: null
+        };
+
+        // 前回お祝いした日が、今の連続の中に入っていれば「同じ連続記録」
+        const isSameStreak = record.milestoneDate !== null
+            && info.start <= record.milestoneDate;
+
+        // 同じ連続記録で、もうお祝いした節目なら何もしない
+        if (isSameStreak && milestone <= record.lastMilestone) {
+            return;
+        }
+
+        // 新しく届いた節目の数だけ🏆を増やす
+        const newTrophies = isSameStreak
+            ? (milestone - record.lastMilestone) / CHALLENGE_DAYS
+            : milestone / CHALLENGE_DAYS;
+
+        record.trophies += newTrophies;
+        record.lastMilestone = milestone;
+        record.milestoneDate = formatDate(
+            addDays(parseDate(info.start), milestone - 1)
+        );
+
+        challengeData[task.id] = record;
+        saveChallenge();
+
+        celebrationQueue.push({
+            name: task.name,
+            milestone: milestone
+        });
+
+    }
+
+    // 順番待ちのお祝いを1つ表示する
+    function showNextCelebration() {
+
+        if ($("#celebration").hasClass("is-open")) {
+            return;
+        }
+
+        const item = celebrationQueue.shift();
+
+        if (!item) {
+            return;
+        }
+
+        const round = item.milestone / CHALLENGE_DAYS;
+
+        $("#celebration-title").text(
+            "「" + item.name + "」" + item.milestone + "日連続達成！"
+        );
+
+        $("#celebration-message").text(
+            round === 1
+                ? "習慣化おめでとう！🔥"
+                : round + "回目の21日チャレンジクリア！すごい！"
+        );
+
+        $("#celebration").addClass("is-open");
+        $("#celebration-close").trigger("focus");
+
+        launchConfetti();
+
+    }
+
+    function closeCelebration() {
+
+        $("#celebration").removeClass("is-open");
+        $("#celebration .confetti").empty();
+
+        // 次のお祝いがあれば続けて表示
+        showNextCelebration();
+
+    }
+
+    $("#celebration-close").on("click", closeCelebration);
+
+    // Escキーでも閉じられるようにする
+    $(document).on("keydown", function (event) {
+        if (event.key === "Escape" && $("#celebration").hasClass("is-open")) {
+            closeCelebration();
+        }
+    });
+
+    // 紙吹雪を降らせる
+    function launchConfetti() {
+
+        const area = $("#celebration .confetti");
+        area.empty();
+
+        // 「動きを減らす」設定の人には紙吹雪を出さない
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            return;
+        }
+
+        const colors = ["#ffcd45", "#ff9f43", "#f28a00", "#ff6b6b", "#7ed6a5", "#6fb1ff"];
+
+        for (let i = 0; i < 80; i++) {
+
+            const piece = $("<span>")
+                .addClass("confetti-piece")
+                .css({
+                    left: Math.random() * 100 + "%",
+                    backgroundColor: colors[i % colors.length],
+                    animationDelay: Math.random() * 0.8 + "s",
+                    animationDuration: 2.2 + Math.random() * 1.5 + "s",
+                    transform: "rotate(" + Math.random() * 360 + "deg)"
+                });
+
+            area.append(piece);
+        }
+
+    }
+
 
     // 前回表示したときの連続日数（スタンプの「ポン」の判定に使う）
     const previousStreaks = {};
@@ -463,9 +619,16 @@ $(function () {
 
             previousStreaks[task.id] = info.current;
 
+            // 21の倍数に届いていたらお祝い（🏆の数もここで更新される）
+            checkMilestone(task, info);
+
+            const trophies = challengeData[task.id]
+                ? challengeData[task.id].trophies
+                : 0;
+
             const li = $("<li>")
                 .addClass("habit-item")
-                .append(row, createChallenge(info, isNewStamp));
+                .append(row, createChallenge(info, isNewStamp, trophies));
 
             list.append(li);
 
@@ -480,7 +643,7 @@ $(function () {
 
     const CHALLENGE_DAYS = 21;
 
-    function createChallenge(info, isNewStamp) {
+    function createChallenge(info, isNewStamp, trophies) {
 
         // 埋まるマスの数：21日目は21マス全部、22日目は次の周の1マス目
         const filled = info.current === 0
@@ -503,6 +666,13 @@ $(function () {
 
         if (round >= 2) {
             stats.append($("<span>").text(round + "周目"));
+        }
+
+        // これまでに21日を達成した回数（途切れても消えない）
+        if (trophies > 0) {
+            stats.append(
+                $("<span>").addClass("trophy-count").text("🏆×" + trophies)
+            );
         }
 
         // ② 21マスのスタンプ
@@ -637,8 +807,12 @@ $(function () {
 
         let current = 0;
 
+        // 今の連続が始まった日（連続0日なら null）
+        let start = null;
+
         while (isChecked(cursor)) {
             current++;
+            start = formatDate(cursor);
             cursor = addDays(cursor, -1);
         }
 
@@ -669,7 +843,8 @@ $(function () {
 
         return {
             current: current,
-            best: Math.max(best, current)
+            best: Math.max(best, current),
+            start: start
         };
 
     }

@@ -119,6 +119,18 @@
 
     </main>
 
+    <!-- 21日達成のお祝い（達成したときだけ表示） -->
+    <div id="celebration" class="celebration">
+        <div class="confetti"></div>
+
+        <div class="celebration-card" role="dialog" aria-modal="true" aria-labelledby="celebration-title">
+            <p class="celebration-icon">🎉 🏆 🎉</p>
+            <h2 id="celebration-title"></h2>
+            <p id="celebration-message"></p>
+            <button type="button" id="celebration-close">閉じる</button>
+        </div>
+    </div>
+
 <!-- jQueryを読み込む -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
