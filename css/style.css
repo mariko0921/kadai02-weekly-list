@@ -358,3 +358,34 @@ main section li label {
 .delete-button:active {
     transform: scale(1.1);
 }
+
+/* 習慣化（🔥）ボタン */
+.habit-button {
+    background-color: transparent;
+    border: none;
+    border-radius: 50%;
+    font-size: 16px;
+    min-width: 44px;
+    min-height: 44px;
+    flex-shrink: 0;
+    cursor: pointer;
+    /* OFFのときは白黒・薄く表示 */
+    filter: grayscale(1);
+    opacity: 0.35;
+    transition: 0.2s;
+}
+
+.habit-button:hover {
+    opacity: 0.7;
+}
+
+/* ONのとき（習慣化中）はカラーで表示 */
+.habit-button.habit-active {
+    filter: none;
+    opacity: 1;
+    background-color: #ffe3c4;
+}
+
+.habit-button:active {
+    transform: scale(1.1);
+}

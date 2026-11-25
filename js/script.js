@@ -59,88 +59,86 @@ $(function () {
     // ③ localStorageからデータを取得
     // =====================================
 
+    // 保存されている週のデータを、今の形式 { tasks, checks } にそろえる
+    // （昔のコードで保存した形式も読めるようにする）
+    function normalizeWeek(data) {
+
+        // 新しいデータ形式
+        if (data.tasks && data.checks) {
+            return data;
+        }
+
+        // 前回のコードで保存した形式を引き継ぐ
+        const oldChecks = {};
+
+        const ids = defaultTasks.map(function (task) {
+            return task.id;
+        });
+
+        for (let day = 0; day < 7; day++) {
+
+            const oldIndices = data[day] || [];
+
+            oldChecks[day] = oldIndices
+                .map(function (index) {
+                    return ids[index];
+                })
+                .filter(Boolean);
+
+        }
+
+        return {
+            tasks: defaultTasks,
+            checks: oldChecks
+        };
+    }
+
     function loadWeek() {
 
         const saved = localStorage.getItem(weekKey);
 
         if (saved) {
-            const data = JSON.parse(saved);
-
-            // 新しいデータ形式
-            if (data.tasks && data.checks) {
-                return data;
-            }
-
-            // 前回のコードで保存した形式を引き継ぐ
-            const oldChecks = {};
-
-            const ids = defaultTasks.map(function (task) {
-                return task.id;
-            });
-
-            for (let day = 0; day < 7; day++) {
-
-                const oldIndices = data[day] || [];
-
-                oldChecks[day] = oldIndices
-                    .map(function (index) {
-                        return ids[index];
-                    })
-                    .filter(Boolean);
-
-            }
-
-            return {
-                tasks: defaultTasks,
-                checks: oldChecks
-            };
+            return normalizeWeek(JSON.parse(saved));
         }
 
         // 新しい週なら習慣化項目を引き継ぐ
+        const savedHabits = localStorage.getItem(habitKey);
 
-const savedHabits = localStorage.getItem(habitKey);
+        let tasks = defaultTasks;
 
-let tasks = defaultTasks;
+        if (savedHabits !== null) {
 
-if (savedHabits !== null) {
+            // 習慣化専用の保存場所から取得
+            tasks = JSON.parse(savedHabits);
 
-    // 習慣化専用の保存場所から取得
-    tasks = JSON.parse(savedHabits);
+        } else {
 
-} else {
+            // 初回のみ、過去の保存データから引き継ぐ
+            const previousKeys = Object.keys(localStorage)
+                .filter(function (key) {
+                    return /^week_\d{4}-\d{2}-\d{2}$/.test(key)
+                        && key < weekKey;
+                })
+                .sort()
+                .reverse();
 
-    // 初回のみ、過去の保存データから引き継ぐ
-    const previousKeys = Object.keys(localStorage)
-        .filter(function (key) {
-            return /^week_\d{4}-\d{2}-\d{2}$/.test(key)
-                && key < weekKey;
-        })
-        .sort()
-        .reverse();
+            if (previousKeys.length > 0) {
 
-    if (previousKeys.length > 0) {
+                const previousData = JSON.parse(
+                    localStorage.getItem(previousKeys[0])
+                );
 
-        const previousData = JSON.parse(
-            localStorage.getItem(previousKeys[0])
-        );
+                if (previousData.tasks) {
+                    tasks = previousData.tasks.filter(function (task) {
+                        return task.habit === true;
+                    });
+                }
 
-        if (previousData.tasks) {
-            tasks = previousData.tasks.filter(function (task) {
-                return task.habit === true;
-            });
+            }
+
         }
 
-    }
-
-}
-
-// 新しい週はチェックを未達成にする
-return {
-    tasks: tasks,
-    checks: {}
-};
-
-
+        // 新しい週はチェックを未達成にする
         return {
             tasks: tasks,
             checks: {}
@@ -156,24 +154,24 @@ return {
 
     function saveWeek() {
 
-    // ① 今週のデータを保存
-    localStorage.setItem(
-        weekKey,
-        JSON.stringify(weeklyData)
-    );
+        // ① 今週のデータを保存
+        localStorage.setItem(
+            weekKey,
+            JSON.stringify(weeklyData)
+        );
 
-    // ② 習慣化したい項目だけを取り出す
-    const habits = weeklyData.tasks.filter(function (task) {
-        return task.habit === true;
-    });
+        // ② 習慣化したい項目だけを取り出す
+        const habits = weeklyData.tasks.filter(function (task) {
+            return task.habit === true;
+        });
 
-    // ③ 習慣化専用の保存場所に保存
-    localStorage.setItem(
-        habitKey,
-        JSON.stringify(habits)
-    );
+        // ③ 習慣化専用の保存場所に保存
+        localStorage.setItem(
+            habitKey,
+            JSON.stringify(habits)
+        );
 
-}
+    }
 
 
     // =====================================
@@ -259,25 +257,28 @@ return {
     // ⑥ 今日・選択した日の達成率を計算
     // =====================================
 
-    function getDayRate(day) {
+    // tasks を渡すとその項目だけで計算する（省略したら全項目）
+    function getDayRate(day, tasks) {
 
-    const total = weeklyData.tasks.length;
-    const checkedIds = weeklyData.checks[day] || [];
+        const targetTasks = tasks || weeklyData.tasks;
 
-    const done = weeklyData.tasks.filter(function (task) {
-        return checkedIds.includes(task.id);
-    }).length;
+        const total = targetTasks.length;
+        const checkedIds = weeklyData.checks[day] || [];
 
-    const rate = total === 0
-        ? 0
-        : Math.round(done / total * 100);
+        const done = targetTasks.filter(function (task) {
+            return checkedIds.includes(task.id);
+        }).length;
 
-    return {
-        total: total,
-        done: done,
-        rate: rate
-    };
-}
+        const rate = total === 0
+            ? 0
+            : Math.round(done / total * 100);
+
+        return {
+            total: total,
+            done: done,
+            rate: rate
+        };
+    }
 
     // =====================================
     // ⑦ 達成率と円グラフを更新
@@ -387,29 +388,33 @@ return {
     // ⑫ チェックを変更したら保存
     // =====================================
 
-$("main").on("change", 'input[type="checkbox"][data-id]', function () {
-
-    const checkedIds = [];
-
-    // 達成チェックが入っている項目だけを取得
-    $('main input[type="checkbox"][data-id]:checked').each(function () {
+    // 押された1項目だけを、選択中の曜日の記録に追加・削除する
+    // （習慣化タブにも同じ項目が表示されるため、画面全体を集め直さない）
+    $("main").on("change", 'input[type="checkbox"][data-id]', function () {
 
         const taskId = $(this).attr("data-id");
+        const isChecked = $(this).prop("checked");
 
-        checkedIds.push(taskId);
+        // 選択中の曜日のチェック情報（いったん対象の項目を取り除く）
+        const checkedIds = (weeklyData.checks[selectedDay] || [])
+            .filter(function (id) {
+                return id !== taskId;
+            });
+
+        // チェックが入ったなら追加する
+        if (isChecked) {
+            checkedIds.push(taskId);
+        }
+
+        weeklyData.checks[selectedDay] = checkedIds;
+
+        // localStorageに保存
+        saveWeek();
+
+        // 画面を更新
+        render();
 
     });
-
-    // 選択中の曜日のチェック情報を上書き
-    weeklyData.checks[selectedDay] = checkedIds;
-
-    // localStorageに保存
-    saveWeek();
-
-    // 画面を更新
-    render();
-
-});
 
     // =====================================
     // ⑬ 項目追加ボタンをクリック
