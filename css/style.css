@@ -708,3 +708,283 @@ main section li.habit-item:has(input:checked) .task-name {
         transform: rotate(720deg) translateX(40px);
     }
 }
+
+/* ==========================================================
+   ポップデザイン（落ち着いたポップ）
+   今の黄色・オレンジはそのままに、遊び心を足す設定。
+   上で決めた見た目を、ここでまとめて上書きしている。
+   ========================================================== */
+
+/* よく使う色に名前をつける（CSS変数） */
+:root {
+    --ink: #4e4038;          /* 文字の色 */
+    --yellow: #ffcd45;       /* メインの黄色 */
+    --yellow-deep: #e9ad1c;  /* 黄色ボタンの下の影 */
+    --cream-line: #f1e2bd;   /* 白いカードの縁 */
+    --cream-shadow: #efdcae; /* 白いカードの下の影 */
+}
+
+/* ① 丸い文字＋うっすらドット柄の背景 */
+body {
+    font-family: "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN",
+        "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+    background-color: #fffaeb;
+    background-image: radial-gradient(#f5e3b5 1.3px, transparent 1.4px);
+    background-size: 22px 22px;
+}
+
+/* ボタンや入力欄は、そのままだと文字の形を受け継がないので指定する */
+button,
+input {
+    font-family: inherit;
+}
+
+/* ② タイトル：「やる！」に蛍光ペン風の線、英字は丸いラベルに */
+header h1 {
+    font-weight: 800;
+}
+
+header h1 span {
+    background: linear-gradient(transparent 62%, #ffe08a 62%);
+    padding: 0 6px;
+    border-radius: 4px;
+}
+
+header p {
+    display: inline-block;
+    background-color: #fff0c7;
+    color: #a9803f;
+    border-radius: 999px;
+    padding: 5px 16px;
+    font-weight: 700;
+    letter-spacing: 2px;
+}
+
+/* ③ カード：ふちどり＋下にくっきりした影で、少し立体的に */
+#progress,
+#week,
+.tab-bar {
+    border: 2px solid var(--cream-line);
+    box-shadow: 0 5px 0 var(--cream-shadow);
+}
+
+#housework,
+#programming,
+#study,
+#health,
+#habit-list {
+    border: 2px solid;
+}
+
+/* カテゴリごとに、ふちと影を背景より少し濃い色にする */
+#housework {
+    border-color: #f6dc97;
+    box-shadow: 0 5px 0 #efd086;
+}
+
+#programming {
+    border-color: #c9ddf7;
+    box-shadow: 0 5px 0 #b8d1f2;
+}
+
+#study {
+    border-color: #f7cdcd;
+    box-shadow: 0 5px 0 #f0bcbc;
+}
+
+#health {
+    border-color: #c8e6c1;
+    box-shadow: 0 5px 0 #b6dcae;
+}
+
+#habit-list {
+    border-color: #ffd3a6;
+    box-shadow: 0 5px 0 #ffc48d;
+}
+
+/* カテゴリの見出しを白い丸ラベルに */
+#housework h2,
+#programming h2,
+#study h2,
+#health h2,
+#habit-list h2 {
+    display: inline-block;
+    background-color: white;
+    border-radius: 999px;
+    padding: 6px 18px;
+    margin: 0 0 4px;
+    font-size: 18px;
+    font-weight: 800;
+}
+
+/* ④ チェック項目：やわらかいふち＋ふわっと浮く */
+main section li {
+    border: 2px solid #f3e9d8;
+    border-radius: 16px;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+main section li:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 0 #f0e4cf;
+}
+
+/* ⑤ 押すと弾むボタン */
+.week-days button,
+.tab-bar button,
+main section > button,
+.add-task-form button,
+#celebration-close {
+    transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow 0.18s, background-color 0.2s;
+}
+
+.week-days button:hover,
+.tab-bar button:hover,
+main section > button:hover,
+.add-task-form button:hover,
+#celebration-close:hover {
+    transform: translateY(-2px);
+}
+
+.week-days button:active,
+.tab-bar button:active,
+main section > button:active,
+.add-task-form button:active,
+#celebration-close:active {
+    transform: scale(0.95);
+}
+
+/* 選んでいる曜日・タブ、黄色のボタンは下に濃い黄色の影 */
+.week-days button.active-day,
+.tab-bar button.tab-active,
+.add-task-form button,
+#celebration-close {
+    box-shadow: 0 3px 0 var(--yellow-deep);
+}
+
+.add-task-form button {
+    font-weight: 700;
+    color: #6b4b19;
+}
+
+/* 項目追加ボタン：点線を太めに、触ると少し色がつく */
+main section > button {
+    border: 2px dashed #e2c890;
+    border-radius: 999px;
+}
+
+main section > button:hover {
+    background-color: #fff8e1;
+}
+
+/* ⑥ 今週の進み具合バー：ななめストライプで楽しく */
+.weekly-bar {
+    height: 16px;
+    border: 2px solid #f6e2a8;
+}
+
+#weekly-bar-fill {
+    background-image: repeating-linear-gradient(
+        45deg,
+        var(--yellow) 0 10px,
+        #ffd96b 10px 20px
+    );
+}
+
+/* ⑦ 円グラフの数字を丸く太く */
+#today-rate,
+#habit-rate,
+#weekly-rate {
+    font-weight: 800;
+}
+
+/* ⑧ お祝いカードも同じ雰囲気に */
+.celebration-card {
+    border: 3px solid #ffe08a;
+}
+
+/* 「動きを減らす」設定の人には、弾む・浮く動きをつけない */
+@media (prefers-reduced-motion: reduce) {
+    main section li,
+    .week-days button,
+    .tab-bar button,
+    main section > button,
+    .add-task-form button,
+    #celebration-close {
+        transition: none;
+        transform: none !important;
+    }
+}
+
+/* ==========================================================
+   今月のカレンダー（円グラフの隣）
+   ========================================================== */
+
+/* 円グラフとカレンダーを横に並べる（幅が狭いときは縦に折り返す） */
+#progress {
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 28px;
+}
+
+.mini-calendar {
+    width: 260px;
+}
+
+.calendar-title {
+    text-align: center;
+    font-weight: 800;
+    font-size: 16px;
+    margin: 0 0 10px;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    text-align: center;
+}
+
+/* 曜日の見出し */
+.calendar-weekday {
+    font-size: 12px;
+    font-weight: 700;
+    color: #a9906d;
+    padding-bottom: 4px;
+}
+
+/* 日付のマス */
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 14px;
+}
+
+/* 土曜は青、日曜は赤（どちらもやわらかい色） */
+.is-saturday {
+    color: #5b8fd6;
+}
+
+.is-sunday {
+    color: #e07070;
+}
+
+/* 今日の日付：黄色の丸＋下に濃い黄色の影 */
+.calendar-day.calendar-today {
+    background-color: var(--yellow);
+    color: #6b4b19;
+    font-weight: 800;
+    box-shadow: 0 3px 0 var(--yellow-deep);
+}
+
+/* スマホ：カレンダーは円グラフの下に、横幅いっぱいで表示 */
+@media (max-width: 600px) {
+    .mini-calendar {
+        width: 100%;
+        max-width: 300px;
+    }
+}

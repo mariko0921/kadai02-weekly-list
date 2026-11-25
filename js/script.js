@@ -1116,10 +1116,81 @@ $(function () {
     });
 
     // =====================================
+    // 今月のカレンダーを作る（今日の日付に色をつける）
+    // =====================================
+
+    function renderCalendar() {
+
+        const year = today.getFullYear();
+        const month = today.getMonth(); // 0＝1月 … 11＝12月
+
+        $("#calendar-title").text(year + "年 " + (month + 1) + "月");
+
+        const grid = $("#calendar-grid");
+        grid.empty();
+
+        // ① 曜日の見出し（アプリの曜日ボタンに合わせて月曜はじまり）
+        ["月", "火", "水", "木", "金", "土", "日"].forEach(function (name, index) {
+
+            const head = $("<span>")
+                .addClass("calendar-weekday")
+                .text(name);
+
+            if (index === 5) {
+                head.addClass("is-saturday");
+            }
+            if (index === 6) {
+                head.addClass("is-sunday");
+            }
+
+            grid.append(head);
+        });
+
+        // ② 1日が何曜日か（月曜＝0 … 日曜＝6）だけ、空白を入れる
+        const firstDay = new Date(year, month, 1);
+        const blankCount = (firstDay.getDay() + 6) % 7;
+
+        for (let i = 0; i < blankCount; i++) {
+            grid.append($("<span>").addClass("calendar-blank"));
+        }
+
+        // ③ 1日〜月末までの日付を並べる
+        //    （来月の0日目＝今月の最終日、という書き方で月末を出す）
+        const lastDate = new Date(year, month + 1, 0).getDate();
+
+        for (let date = 1; date <= lastDate; date++) {
+
+            const cell = $("<span>")
+                .addClass("calendar-day")
+                .text(date);
+
+            const weekdayIndex = (blankCount + date - 1) % 7;
+
+            if (weekdayIndex === 5) {
+                cell.addClass("is-saturday");
+            }
+            if (weekdayIndex === 6) {
+                cell.addClass("is-sunday");
+            }
+
+            // 今日の日付だけ色を変える
+            if (date === today.getDate()) {
+                cell.addClass("calendar-today")
+                    .attr("aria-current", "date");
+            }
+
+            grid.append(cell);
+        }
+
+    }
+
+
+    // =====================================
     // ⑮ 最初の画面表示
     // =====================================
 
     saveWeek();
+    renderCalendar();
     render();
 
 });
