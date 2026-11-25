@@ -14,23 +14,39 @@
     <header>
     <h1>
         やると決めたら<br>
-        <span>「やる！」</span></div>リスト✨
+        <span>「やる！」</span>リスト✨
     </h1>
     <p>WEEKLY CHALLENGE TO DAILY ROUTINE</p>
     </header>
 
     <main>
 
+        <!-- 切り替えタブ（Todoリスト／習慣化） -->
+        <nav class="tab-bar">
+            <button type="button" data-tab="all" class="tab-active">📋 Todoリスト</button>
+            <button type="button" data-tab="habit">🔥 習慣化</button>
+        </nav>
+
         <!-- ② 今日の達成率 -->
         <section id="progress">
-    <div class="progress-circle">
-        <div class="progress-inner">
-            <h2>今日の達成率</h2>
-            <p id="today-rate">0%</p>
-            <p id="today-count">0 / 0 完了</p>
-        </div>
-    </div>
-    </section>
+            <!-- 全体の達成率 -->
+            <div class="progress-circle" id="all-circle">
+                <div class="progress-inner">
+                    <h2>今日の達成率</h2>
+                    <p id="today-rate">0%</p>
+                    <p id="today-count">0 / 0 完了</p>
+                </div>
+            </div>
+
+            <!-- 🔥 習慣化の達成率（習慣化タブのときだけ表示） -->
+            <div class="progress-circle" id="habit-circle">
+                <div class="progress-inner">
+                    <h2>🔥 習慣化の達成率</h2>
+                    <p id="habit-rate">0%</p>
+                    <p id="habit-count">0 / 0 完了</p>
+                </div>
+            </div>
+        </section>
 
         <!-- ③ 曜日 -->
         <section id="week">
@@ -52,6 +68,18 @@
         <button type="button">日</button>
     </div>
 </section>
+
+        <!-- 🔥 習慣化チャレンジ（習慣化タブのときだけ表示） -->
+        <section id="habit-list">
+            <h2>🔥 習慣化チャレンジ</h2>
+
+            <ul></ul>
+
+            <p class="habit-empty">
+                🔥がついた項目はまだありません。<br>
+                「📋 すべて」タブで🔥を押して、習慣化をはじめよう！
+            </p>
+        </section>
 
         <!-- ④ 家事 -->
         <section id="housework">
@@ -90,6 +118,18 @@
         </section>
 
     </main>
+
+    <!-- 21日達成のお祝い（達成したときだけ表示） -->
+    <div id="celebration" class="celebration">
+        <div class="confetti"></div>
+
+        <div class="celebration-card" role="dialog" aria-modal="true" aria-labelledby="celebration-title">
+            <p class="celebration-icon">🎉 🏆 🎉</p>
+            <h2 id="celebration-title"></h2>
+            <p id="celebration-message"></p>
+            <button type="button" id="celebration-close">閉じる</button>
+        </div>
+    </div>
 
 <!-- jQueryを読み込む -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
