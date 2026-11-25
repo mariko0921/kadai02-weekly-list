@@ -21,6 +21,12 @@
 
     <main>
 
+        <!-- 切り替えタブ（Todoリスト／習慣化） -->
+        <nav class="tab-bar">
+            <button type="button" data-tab="all" class="tab-active">📋 Todoリスト</button>
+            <button type="button" data-tab="habit">🔥 習慣化</button>
+        </nav>
+
         <!-- ② 今日の達成率 -->
         <section id="progress">
     <div class="progress-circle">
@@ -52,6 +58,18 @@
         <button type="button">日</button>
     </div>
 </section>
+
+        <!-- 🔥 習慣化チャレンジ（習慣化タブのときだけ表示） -->
+        <section id="habit-list">
+            <h2>🔥 習慣化チャレンジ</h2>
+
+            <ul></ul>
+
+            <p class="habit-empty">
+                🔥がついた項目はまだありません。<br>
+                「📋 すべて」タブで🔥を押して、習慣化をはじめよう！
+            </p>
+        </section>
 
         <!-- ④ 家事 -->
         <section id="housework">

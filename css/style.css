@@ -389,3 +389,66 @@ main section li label {
 .habit-button:active {
     transform: scale(1.1);
 }
+
+/* =====================================
+   切り替えタブ（円グラフの上）
+   ===================================== */
+
+.tab-bar {
+    display: flex;
+    gap: 8px;
+    background-color: white;
+    border-radius: 18px;
+    padding: 6px;
+    margin-bottom: 20px;
+    box-shadow: 0 5px 20px rgba(150, 110, 40, 0.08);
+}
+
+.tab-bar button {
+    flex: 1;
+    border: none;
+    border-radius: 14px;
+    background-color: #fff4d9;
+    color: #6b5848;
+    padding: 14px 0;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* 選択中のタブ */
+.tab-bar button.tab-active {
+    background-color: #ffcd45;
+    color: #6b4b19;
+}
+
+/* =====================================
+   🔥 習慣化チャレンジのカード
+   ===================================== */
+
+#habit-list {
+    display: none;
+    background-color: #fff3e6;
+    border: 2px solid #ffd3a6;
+    border-radius: 25px;
+    padding: 22px;
+    margin-bottom: 20px;
+}
+
+.habit-empty {
+    text-align: center;
+    color: #a07f5c;
+    line-height: 1.8;
+}
+
+/* 習慣化タブのとき：習慣化カードを出し、4カテゴリを隠す */
+body.tab-habit #habit-list {
+    display: block;
+}
+
+body.tab-habit #housework,
+body.tab-habit #programming,
+body.tab-habit #study,
+body.tab-habit #health {
+    display: none;
+}

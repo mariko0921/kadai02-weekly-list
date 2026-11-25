@@ -54,6 +54,9 @@ $(function () {
     // 現在画面で選んでいる曜日
     let selectedDay = todayIndex;
 
+    // 現在開いているタブ（"all"＝すべて／"habit"＝習慣化）
+    let currentTab = "all";
+
 
     // =====================================
     // ③ localStorageからデータを取得
@@ -365,10 +368,55 @@ $(function () {
 
     function render() {
         renderTasks();
+        renderHabitList();
         updateProgress();
         updateDays();
         updateWeeklyProgress();
     }
+
+
+    // =====================================
+    // 習慣化タブの一覧を表示する
+    // =====================================
+
+    function renderHabitList() {
+
+        const habits = weeklyData.tasks.filter(function (task) {
+            return task.habit === true;
+        });
+
+        // 🔥項目が1つもないときだけ案内文を出す
+        $("#habit-list .habit-empty").toggle(habits.length === 0);
+
+    }
+
+
+    // =====================================
+    // タブを切り替える
+    // =====================================
+
+    function switchTab(tabName) {
+
+        currentTab = tabName;
+
+        // body に目印のクラスをつけ、CSSで表示・非表示を切り替える
+        $("body").toggleClass("tab-habit", tabName === "habit");
+
+        // 選択中のタブボタンに色をつける
+        $(".tab-bar button").each(function () {
+            $(this).toggleClass(
+                "tab-active",
+                $(this).attr("data-tab") === tabName
+            );
+        });
+
+        render();
+
+    }
+
+    $(".tab-bar button").on("click", function () {
+        switchTab($(this).attr("data-tab"));
+    });
 
 
     // =====================================
